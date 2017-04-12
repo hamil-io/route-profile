@@ -1,0 +1,3 @@
+#!/bin/bash
+
+siege -c200 -d1 -t3M -i -l -f test.urls
