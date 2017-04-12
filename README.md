@@ -60,13 +60,14 @@ go build
 ## API
 
 The API itself is fairly simple. There are two endpoints that each take the same parameters:
+
 * geometry: An encoded polyline representing the route
 * resolution: An optional parameter that determines the sampling resolution. This is provided in arcseconds, the default is 0.0025.
 
 ### Wind Endpoint
 
-`curl http://localhost:8080/wind -d '{"geometry":"{``mE|h}aOgFEApECtE?p@AbDAfD?\\At@A~DAxK?d@A\\Cl@?nD?P?L?LB`@f@tFPjC@P@Lx@dJ@F?N?VCdJ?R?VChI?P?FeECy@?}FEqFCM?E?CpF?v@ChHBlHAhG@^D?nB@?P@PONWAGF"}'`
+```curl http://localhost:8080/wind -d '{"geometry":"{``mE|h}aOgFEApECtE?p@AbDAfD?\\At@A~DAxK?d@A\\Cl@?nD?P?L?LB`@f@tFPjC@P@Lx@dJ@F?N?VCdJ?R?VChI?P?FeECy@?}FEqFCM?E?CpF?v@ChHBlHAhG@^D?nB@?P@PONWAGF"}'```
 
 ### Elevation Endpoint
 
-`curl http://localhost:8080/elevation -d '{"geometry":"{``mE|h}aOgFEApECtE?p@AbDAfD?\\At@A~DAxK?d@A\\Cl@?nD?P?L?LB`@f@tFPjC@P@Lx@dJ@F?N?VCdJ?R?VChI?P?FeECy@?}FEqFCM?E?CpF?v@ChHBlHAhG@^D?nB@?P@PONWAGF"}'`
+```curl http://localhost:8080/elevation -d '{"geometry":"{``mE|h}aOgFEApECtE?p@AbDAfD?\\At@A~DAxK?d@A\\Cl@?nD?P?L?LB`@f@tFPjC@P@Lx@dJ@F?N?VCdJ?R?VChI?P?FeECy@?}FEqFCM?E?CpF?v@ChHBlHAhG@^D?nB@?P@PONWAGF"}'```
