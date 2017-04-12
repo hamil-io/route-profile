@@ -17,4 +17,4 @@ BEGIN
     FROM segments(interpolate(line, sample)) as s, wind
     WHERE ST_Intersects(rast, ST_Transform(start, 98411));
 END;
-$function$
+$function$;

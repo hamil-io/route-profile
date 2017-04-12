@@ -11,4 +11,4 @@ BEGIN
        SELECT ST_MakeLine(ST_GeometryN(ST_LocateAlong(linem, i), 1)) INTO points FROM linemesure;
     RETURN points;
 END;
-$function$
+$function$;

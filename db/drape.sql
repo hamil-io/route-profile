@@ -22,7 +22,7 @@ BEGIN
     SELECT ST_MakeLine(geom) INTO geom3d FROM points3d;
     RETURN geom3d;
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.drape(line geometry, __table text, sample numeric)
 RETURNS geometry
@@ -49,4 +49,4 @@ BEGIN
     SELECT ST_MakeLine(geom) FROM points3d', line, line, line, sample, __table, __table, __table) INTO geom3d;
     RETURN geom3d;
 END;
-$function$
+$function$;

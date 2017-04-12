@@ -9,4 +9,4 @@ BEGIN
         WITH points3d AS (SELECT (ST_DumpPoints(line)).geom AS geom)
         SELECT ST_Z(geom) FROM points3d;
 END;
-$function$
+$function$;
