@@ -1,0 +1,7 @@
+commit.msg
+*.swp
+*.pyc
+database_pg.py
+POSTGIS
+MYSQL
+data/tile.csv
