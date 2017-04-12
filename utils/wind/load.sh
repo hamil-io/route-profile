@@ -1,9 +1,11 @@
 #!/bin/bash
 
-cd ~/projects/wind/
-rm hrrr.t* 
+BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 URL="http://www.ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod"
 FILE=`date -u +"hrrr.%Y%m%d/hrrr.t%Hz.wrfsubhf01.grib2"`
+
+cd $BASE
+rm hrrr.t* 
 
 wget "$URL/$FILE"
 
