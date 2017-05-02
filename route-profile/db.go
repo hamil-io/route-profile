@@ -1,6 +1,7 @@
 package main
 
 import (
+    "os"
 	"database/sql"
 	_ "github.com/lib/pq"
 )
@@ -9,7 +10,7 @@ var db *sql.DB
 
 func init() {
     var err error
-    db, err = sql.Open("postgres", "postgres://postgres:tribes@127.0.0.1/elevation")
+    db, err = sql.Open("postgres", "postgres://" + os.Getenv("DB_USER") + "@127.0.0.1/" + os.Getenv("DB_NAME"))
     db.SetMaxOpenConns(32)
 
 	if err != nil {
