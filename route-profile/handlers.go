@@ -60,7 +60,10 @@ func GetRaster(raster string, w http.ResponseWriter, r *http.Request) {
 
     geometry := req.Geometry
     req_res := req.Resolution
-    resolution := 0.0025
+    length := Length(geometry)
+    goal := length/32
+    resolution := length / (103086.351683 * 100)
+
     if req_res != 0.0 {
         resolution = req_res;
     }
@@ -74,7 +77,7 @@ func GetRaster(raster string, w http.ResponseWriter, r *http.Request) {
         return out
     }
 
-    segments := SplitSegments(geometry, 4000)
+    segments := SplitSegments(geometry, goal)
     total := len(segments)
     out := make(chan RasterSegment)
     var rasterSegments RasterSegments
