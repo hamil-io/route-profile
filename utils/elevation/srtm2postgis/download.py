@@ -5,6 +5,7 @@ from ftplib import FTP
 import urllib
 import re
 import sys
+import os
 import requests
 from bs4 import BeautifulSoup
 
@@ -63,15 +64,18 @@ def main():
     # Do we have a bounding box?
     [north, south, west, east] = util.getBoundingBox(sys.argv, 3)
     for i in range(len(files)):
-      if skip:
-          if files[i] == resume:
-              skip = False
+        if skip:
+            if files[i] == resume:
+                skip = False
 
-      if not(skip):
-          [lat,lon] = util.getLatLonFromFileName(files[i])
-          if util.inBoundingBox(lat, lon, north, south, west, east):
-            print "Downloading " + files[i] + " (lat = " + str(lat)  + " , lon = " + str(lon) + " )... (" + str(i + 1) + " of " + str(len(files)) +")"
-            urllib.urlretrieve(url + "/"  + files[i],"data/" + continent + "/" + files[i])
+        if not(skip):
+            [lat,lon] = util.getLatLonFromFileName(files[i])
+            if util.inBoundingBox(lat, lon, north, south, west, east):
+                if os.path.exists("data/"+continent+"/"+files[i]):
+                    print "File " +files[i]+ " already exists, skipping..."
+                else:
+                    print "Downloading " + files[i] + " (lat = " + str(lat)  + " , lon = " + str(lon) + " )... (" + str(i + 1) + " of " + str(len(files)) +")"
+                    urllib.urlretrieve(url + "/"  + files[i],"data/" + continent + "/" + files[i])
 
 if __name__ == '__main__':
     main()
