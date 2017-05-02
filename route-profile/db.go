@@ -108,7 +108,7 @@ func Segments(geom SubGeometry, pieces int) []SubGeometry{
 
 func Length(geometry string) float64{
     var length float64
-    rows, err := db.Query("SELECT ST_Length($1::geography) as length", geometry)
+    rows, err := db.Query("SELECT ST_Length(ST_LineFromEncodedPolyline($1)::geography) as length", geometry)
 
     if err != nil {
         panic(err)
