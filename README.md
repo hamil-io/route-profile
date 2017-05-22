@@ -62,7 +62,7 @@ go build
 The API itself is fairly simple. There are two endpoints that each take the same parameters:
 
 * geometry: An encoded polyline representing the route
-* resolution: An optional parameter that determines the sampling resolution. This is provided in arcseconds, the default is 0.0025.
+* resolution: An optional parameter that determines the sampling resolution. This is provided in degrees, the default is calculated by length(geometry)/100 with a minimum of 0.00025 degrees.
 
 ### Wind Endpoint
 

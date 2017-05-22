@@ -60,13 +60,22 @@ func GetRaster(raster string, w http.ResponseWriter, r *http.Request) {
 
     geometry := req.Geometry
     req_res := req.Resolution
-    length := Length(geometry)
-    goal := length/32
-    resolution := length / (103086.351683 * 100)
+    length := GeometryLength(geometry)
+    resolution := length / 100.0
+
+    // Prevent oversampling
+    if resolution < 0.00025 {
+        resolution = 0.00025;
+    }
 
     if req_res != 0.0 {
         resolution = req_res;
     }
+
+    // The number of samples we want to process per thread
+    samples := 1000.0
+    goal := samples / (length / resolution)
+    goal *= GeographyLength(geometry)
 
     rasterFunc := func(raster string, geom SubGeometry, res float64, out chan RasterSegment) <-chan RasterSegment{
         if raster == "wind" {
@@ -100,7 +109,6 @@ func GetRaster(raster string, w http.ResponseWriter, r *http.Request) {
     for _, segment := range rasterSegments {
         result = append(result, segment.Values...)
     }
-
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
