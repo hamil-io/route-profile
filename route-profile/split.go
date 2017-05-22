@@ -5,8 +5,8 @@ import (
 )
 
 type SubGeometry struct {
-	Geometry         string
 	StartPosition    float64
+	EndPosition      float64
     Length           float64
 	Geometry         string
 }
@@ -52,6 +52,8 @@ func SplitSegments(geometry string, goal float64) []SubGeometry {
 
     length := 0.0
     geom := Geometry(geometry)
+    geom.StartPosition = 0;
+    geom.EndPosition = 1;
     out := make(chan SubGeometry, 32)
     Split(geom, goal, out)
 
@@ -80,7 +82,9 @@ func Split(geom SubGeometry, goal float64, out chan SubGeometry) <-chan SubGeome
 
         for i, segment := range(Segments(geom, split)) {
             start := geom.StartPosition
-            segment.StartPosition = start +  (1.0 - start) * (float64(i) * (1.0/float64(split)))
+            span := geom.EndPosition - start
+            segment.StartPosition = start +  (1.0 - start) * (float64(i) * (span/float64(split)))
+            segment.EndPosition = start +  (1.0 - start) * (float64(i+1) * (span/float64(split)))
             go Split(segment, goal, out)
         }
     }
