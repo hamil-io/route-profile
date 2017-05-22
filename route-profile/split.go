@@ -8,6 +8,21 @@ type SubGeometry struct {
 	Geometry         string
 	StartPosition    float64
     Length           float64
+	Geometry         string
+}
+
+type SubGeometries []SubGeometry
+
+func (slice SubGeometries) Len() int {
+    return len(slice)
+}
+
+func (slice SubGeometries) Less(i, j int) bool {
+    return slice[i].StartPosition < slice[j].StartPosition;
+}
+
+func (slice SubGeometries) Swap(i, j int) {
+    slice[i], slice[j] = slice[j], slice[i]
 }
 
 type RasterSegment struct {
