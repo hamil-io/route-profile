@@ -8,6 +8,7 @@ if [ $? -ne 4 ]; then
 fi
 
 # Find source directory of this script
+BASE=$(pwd)
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
     DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -28,6 +29,9 @@ Where:
     -p, --password=PASSWORD            Password for NASA Earthdata
     -c, --continent=CONTINENT          Continent you would like to load, available values are:
                                            Africa, Australia, Eurasia, North_America, South_America
+    -o, --out=FILE                     Desired output file, defaults to ./elevation.sql
+    -t, --table=TABLE                  Desired table name, defaults to elevation
+    -s, --size=SIZE                    Tile size to pass to raster2pgsql, defaults to 30x30
 
     Constraints:
         --latitude-min=[-90, 90]       Minimum latitude you would like to load
@@ -38,8 +42,32 @@ Where:
     echo "$usage"
 }
 
-SHORT=cuph
-LONG=latitude-min,latitude-max,longitude-min,longitude-max,continent,user,password
+parse_coord() {
+    in="$1"
+    parsed=""
+    lead=$(echo $in | cut -c 1)
+
+    if [ "$lead" == "S" ] || [ "$lead" == "W" ]; then
+        lead="-"
+    else
+        lead=""
+    fi
+
+    parsed="$lead"
+    parsed+=$(echo $in | cut -c 2-)
+}
+
+table="elevation"
+output="elevation.sql"
+size="30x30"
+
+lon_min="-180"
+lon_max="180"
+lat_min="-90"
+lat_max="90"
+
+SHORT="c:u:p:o:t:s:h"
+LONG="continent:,user:,password:,help,latitude-min:,latitude-max:,longitude-min:,longitude-max:,out:,table,:size:"
 
 PARSED=$(getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@")
 if [ $? -ne 0 ]; then
@@ -56,38 +84,50 @@ while true; do
             ;;
         -c|--continent)
             continent=$2
-            shift
+            shift 2
             ;;
         -u|--user)
             user=$2
-            shift
+            shift 2
             ;;
         -p|--password)
             pass=$2
-            shift
+            shift 2
+            ;;
+        -o|--out)
+            output=$2
+            shift 2
+            ;;
+        -t|--table)
+            table=$2
+            shift 2
+            ;;
+        -s|--size)
+            size=$2
+            shift 2
             ;;
         --latitude-min)
             lat_min=$2
-            shift
+            shift 2
             ;;
         --latitude-max)
             lat_max=$2
-            shift
+            shift 2
             ;;
         --longitude-min)
             lon_min=$2
-            shift
+            shift 2
             ;;
         --longitude-max)
             lon_max=$2
-            shift
+            shift 2
             ;;
         --)
             shift
             break
             ;;
         *)
-            echo "Programming error"
+            echo "Unrecognized Option: $1"
             exit 3
             ;;
     esac
@@ -110,21 +150,63 @@ cd /tmp/route-profile/elevation
 input="$DIR/tile.urls"
 
 # test to see if user/pass is correct
+echo "Testing server connection..."
 test_tile=$(head -n 1 $input)
-test_resp=0
-test_resp=$(wget --user $user --password $pass $test_tile  2>&1 | grep -c "401")
+test_resp=$(wget -O /dev/null --quiet --user $user --password $pass $test_tile  2>&1)
 
-if [ "$test_resp" -gt 0 ]; then
-    echo "Username or password is incorrect"
+if [ "$?" -gt 0 ]; then
+    echo "Unable to connect to server, check the username and password"
     exit 3
 fi
 
-# download the specified tiles
-files=()
+# filter the specified tiles
+
+filter() {
+    lon_degree=$(echo $1 | cut -c 57-59)
+    lat_degree=$(echo $1 | cut -c 60-63)
+
+    parse_coord $lat_degree
+    lat_degree=$parsed
+
+    parse_coord $lon_degree
+    lon_degree=$parsed
+
+    if [ "$lat_degree" -ge "$lat_min" ] &&
+       [ "$lat_degree" -le "$lat_max" ] &&
+       [ "$lon_degree" -ge "$lon_min" ] &&
+       [ "$lon_degree" -le "$lon_max" ]; then
+        echo $1 >> tile.list
+    fi
+}
+
+echo "Reading tile list..."
+echo "" > tile.list
+echo "" > downloaded.list
+
 while IFS= read -r var
 do
-    files+=($var)
+    filter $var &
 done < "$input"
-echo "$user"
-echo "$pass"
-echo ${files[*]} | xargs -n 1 -P 16 wget --user $user --password $pass
+
+total=$(wc -l < tile.list)
+
+echo "Preparing to download $total tiles..."
+< tile.list xargs -n 1 -P 16 -I {} -- sh -c "wget --quiet --user $user --password $pass {}; echo {} >> downloaded.list; echo Downloaded \$(wc -l < downloaded.list)/$total: {};"
+
+echo "Decompressing tiles..."
+unzip "*.zip"
+
+echo
+echo "Converting tiles to SQL..."
+echo
+
+CUR=$(pwd)
+pattern="*.hgt"
+files=( "$CUR/$pattern" )
+
+cd $BASE
+raster2pgsql -p -I -M "${files[0]}" > $output
+for f in "$pattern"; do raster2pgsql -a -Y -t $size $f $table >> $output; done
+
+echo
+echo "Finished!"
