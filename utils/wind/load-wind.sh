@@ -1,11 +1,10 @@
 #!/bin/bash
 
-BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+mkdir -p /tmp/route-profile/wind
+cd /tmp/route-profile/wind
+rm hrrr.t* 
 URL="http://www.ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod"
 FILE=`date -u +"hrrr.%Y%m%d/hrrr.t%Hz.wrfsubhf01.grib2"`
-
-cd $BASE
-rm hrrr.t* 
 
 wget "$URL/$FILE"
 
@@ -19,10 +18,10 @@ done
 echo "Download sucessful!"
 echo "Exporting raster bands..."
 
-raster2pgsql -d -I -M -b 15,16,56,57,97,98,138,139 -s 98411 -t 10x10 hrrr.t* wind > wind.sql
+/usr/local/bin/raster2pgsql -d -I -M -b 15,16,56,57,97,98,138,139 -s 98411 -t 10x10 hrrr.t* wind > wind.sql 2>&1
 
 echo "Importing into Postgres..."
 
-sudo psql elevation < wind.sql
+psql route-profile < wind.sql
 
 echo "Finished!"
