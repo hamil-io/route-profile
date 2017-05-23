@@ -67,7 +67,7 @@ lat_min="-90"
 lat_max="90"
 
 SHORT="c:u:p:o:t:s:h"
-LONG="continent:,user:,password:,help,latitude-min:,latitude-max:,longitude-min:,longitude-max:,out:,table:,:size:"
+LONG="continent:,user:,password:,help,latitude-min:,latitude-max:,longitude-min:,longitude-max:,out:,table:,size:"
 
 PARSED=$(getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@")
 if [ $? -ne 0 ]; then
