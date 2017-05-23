@@ -67,7 +67,7 @@ lat_min="-90"
 lat_max="90"
 
 SHORT="c:u:p:o:t:s:h"
-LONG="continent:,user:,password:,help,latitude-min:,latitude-max:,longitude-min:,longitude-max:,out:,table,:size:"
+LONG="continent:,user:,password:,help,latitude-min:,latitude-max:,longitude-min:,longitude-max:,out:,table:,:size:"
 
 PARSED=$(getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@")
 if [ $? -ne 0 ]; then
@@ -180,8 +180,8 @@ filter() {
 }
 
 echo "Reading tile list..."
-echo "" > tile.list
-echo "" > downloaded.list
+> tile.list
+> downloaded.list
 
 while IFS= read -r var
 do
@@ -191,9 +191,12 @@ done < "$input"
 total=$(wc -l < tile.list)
 
 echo "Preparing to download $total tiles..."
+echo
 < tile.list xargs -n 1 -P 16 -I {} -- sh -c "wget --quiet --user $user --password $pass {}; echo {} >> downloaded.list; echo Downloaded \$(wc -l < downloaded.list)/$total: {};"
 
+echo
 echo "Decompressing tiles..."
+echo
 unzip "*.zip"
 
 echo
@@ -201,12 +204,14 @@ echo "Converting tiles to SQL..."
 echo
 
 CUR=$(pwd)
-pattern="*.hgt"
-files=( "$CUR/$pattern" )
+pattern="$CUR/*.hgt"
+files=( $pattern )
 
 cd $BASE
-raster2pgsql -p -I -M "${files[0]}" > $output
-for f in "$pattern"; do raster2pgsql -a -Y -t $size $f $table >> $output; done
+raster2pgsql -p -I -M "${files[0]}" $table > $output
+for f in $pattern; do raster2pgsql -a -Y -t $size $f $table >> $output; done
 
-echo
+echo 
+echo "Cleaning up..."
+rm /tmp/route-profile/elevation/*
 echo "Finished!"
