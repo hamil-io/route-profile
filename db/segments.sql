@@ -1,3 +1,10 @@
+/*
+Segments take a geometry and converts each pair of points along the line into
+segments. Segments have a start and end point, a length, and a theta component.
+Theta is the angle from the equator for the segment. Segments will return one
+less segment than the number of points in the line. This function is typically
+used with interpolate to return a list of uniform length segments.
+*/
 CREATE OR REPLACE FUNCTION public.segments(line geometry)
 RETURNS TABLE(
     n integer,

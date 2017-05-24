@@ -1,3 +1,7 @@
+/*
+This is the projection used for the NOAA High Resolution Rapid Refresh rasters.
+The system was determined by running gdalinfo on the downloaded GRIB files.
+*/
 INSERT into spatial_ref_sys
     (srid, auth_name, auth_srid, proj4text, srtext)
     values (

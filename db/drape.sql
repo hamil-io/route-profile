@@ -1,3 +1,9 @@
+/*
+Drape takes a line and returns a 3d line with the Z component taken from the
+loaded digital elevation model. Drape will interpolate sample points along
+the provided geometry at the specified sample resoultion. The resolution should
+be provided in spatial reference units. In our case this is degrees.
+*/
 CREATE OR REPLACE FUNCTION public.drape(line geometry, sample numeric)
 RETURNS geometry
 LANGUAGE plpgsql

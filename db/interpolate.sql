@@ -1,3 +1,7 @@
+/*
+Interpolate takes a line geometry and a sample resolution and returns a new
+geometry with points sampled at the specified resolution.
+*/
 CREATE OR REPLACE FUNCTION public.interpolate(line geometry, sample numeric)
 RETURNS geometry
 LANGUAGE plpgsql

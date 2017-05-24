@@ -1,3 +1,9 @@
+/*
+Wind will calculate the headwing along the segments of a line geometry.
+Segments are interpolated uniformly using the sample resolution. Headwind
+is calculated from the U and V wind components from the loaded wind raster.
+Only wind that is normal to the segment angle is considered headwind.
+*/
 CREATE OR REPLACE FUNCTION public.wind(line geometry, sample numeric)
 RETURNS TABLE(
     length double precision,
