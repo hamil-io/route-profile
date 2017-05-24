@@ -15,7 +15,7 @@ CREATE EXTENSION postgis;
 
 ### Elevation
 
-Elevation data comes from NASA's [SRTM](http://www2.jpl.nasa.gov/srtm/). To load the data we use `utils/elevation/srtm2postgis`. There are three parts to loading the data, first you must download the SRTM tiles, then create your database/tables, and finally import the raster tiles.
+Elevation data comes from NASA's [SRTM](http://www2.jpl.nasa.gov/srtm/). To load the data we use `utils/elevation/load-elevation`. There are three parts to loading the data, first you must download the SRTM tiles, then create your database/tables, and finally import the raster tiles.
 
 #### Download
 
