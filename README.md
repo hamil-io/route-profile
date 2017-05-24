@@ -4,28 +4,32 @@ This is the route-profile service. It provides an API for returning the elevatio
 
 ## Data Sources
 
+Before you can load data from any of the data sources you must be sure to create a spatially enabled database
+
+```
+CREATE USER username WITH PASSWORD 'password';
+CREATE DATABASE route-profile WITH OWNER username;
+\connect route-profile
+CREATE EXTENSION postgis;
+```
+
 ### Elevation
 
 Elevation data comes from NASA's [SRTM](http://www2.jpl.nasa.gov/srtm/). To load the data we use `utils/elevation/srtm2postgis`. There are three parts to loading the data, first you must download the SRTM tiles, then create your database/tables, and finally import the raster tiles.
 
 #### Download
 
-`python download.py North_America`
-
-#### Create Database
+There is a utility provided for downloading the elevation tiles and getting it ready for import into postgres. Downloading the tiles requires a NASA Earthdata login which can be obtained [here](https://urs.earthdata.nasa.gov/). The `load-elevation` utility will download tiles for the entire globe unless you provide constraints. See `load-elevation --help` for more info.
 
 ```
-CREATE USER username WITH PASSWORD 'password';
-CREATE DATABASE route-profile WITH OWNER username;
-\connect route-profile
-CREATE EXTENSION postgis;```
+./utils/elevation/load-elevation -u user -p password --latitude-min=20 --latitude-max=30 --out=data.sql
 ```
 
 #### Load Data
 
-`sudo -u username python read_data_pg.py North_America`
+Once you've generated you SQL data using the `load-elevation` utility you can simply import it directly into postgres.
 
-Note: username should be the Postgres user you created
+`psql < data.sql`
 
 ### Wind
 
@@ -37,7 +41,7 @@ The NOAA uses a non-standard projection for this data so you must create the pro
 
 To download and load the data simply run the provided shell script:
 
-`utils/wind/load.sh`
+`utils/wind/load-wind`
 
 The load script will attempt to load the data for the next hour. If the data is not yet available on the NOAA's FTP it will retry until the data becomes available. The data is updated by the NOAA hourly so we recommend setting up a simple crontab:
 
