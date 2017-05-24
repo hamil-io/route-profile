@@ -24,7 +24,7 @@ Usage: load-elevation -u user -p password [OPTION...]
 
 Where:
 
-    -h                                 Show this help text
+    -h, --help                         Show this help text
     -u, --user=USERNAME                Username for NASA Earthdata
     -p, --password=PASSWORD            Password for NASA Earthdata
     -c, --continent=CONTINENT          Continent you would like to load, available values are:
