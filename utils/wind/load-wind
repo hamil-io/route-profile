@@ -100,7 +100,7 @@ done
 echo "Download sucessful!"
 echo "Exporting raster bands..."
 
-/usr/local/bin/raster2pgsql -d -I -M -Y -b 15,16,56,57,97,98,138,139 -s 98411 -t $size hrrr.t* $table > wind.sql 2>&1
+raster2pgsql -d -I -M -Y -b 15,16,56,57,97,98,138,139 -s 98411 -t $size hrrr.t* $table > wind.sql
 
 echo "Importing into Postgres..."
 
