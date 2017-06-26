@@ -17,10 +17,10 @@ AS $function$
 BEGIN
     RETURN QUERY
     SELECT s.length, degrees(s.theta),
-        (ST_Value(rast, 1,  ST_Transform(start, 98411)) * x) + (ST_Value(rast, 2,  ST_Transform(start, 98411)) * y) AS magnitude,
-        ST_Value(rast, 1,  ST_Transform(start, 98411)) AS wind_u,
-        ST_Value(rast, 2,  ST_Transform(start, 98411)) AS wind_v
-    FROM segments(interpolate(line, sample)) as s, wind
-    WHERE ST_Intersects(rast, ST_Transform(start, 98411));
+        (ST_Value(rast, 1,  start) * x) + (ST_Value(rast, 2,  start) * y) AS magnitude,
+        ST_Value(rast, 1,  start) AS wind_u,
+        ST_Value(rast, 2,  start) AS wind_v
+    FROM segments(interpolate(line, sample), 98411) as s, wind
+    WHERE ST_Intersects(rast, start);
 END;
 $function$;
