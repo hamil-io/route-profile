@@ -10,7 +10,13 @@ var db *sql.DB
 
 func init() {
     var err error
-    db, err = sql.Open("postgres", "postgres://" + os.Getenv("DB_USER") + "@127.0.0.1/" + os.Getenv("DB_NAME"))
+    host, ok := os.LookupEnv("DB_HOST")
+    if !ok {
+        host = "/var/run/postgresql/"
+    }
+    db, err = sql.Open("postgres", "user=" + os.Getenv("DB_USER") + " " +
+                                   "host=" + host + " " +
+                                   "dbname=" + os.Getenv("DB_NAME"))
     db.SetMaxOpenConns(32)
 
 	if err != nil {
