@@ -29,10 +29,10 @@ func GetSegments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	geometry := req.Geometry
-	req_res := req.Resolution
+	reqRes := req.Resolution
 	goal := 4000.0
-	if req_res != 0.0 {
-		goal = req_res
+	if reqRes != 0.0 {
+		goal = reqRes
 	}
 
 	segments := SplitSegments(geometry, goal)
@@ -59,7 +59,7 @@ func GetRaster(raster string, w http.ResponseWriter, r *http.Request) {
 	}
 
 	geometry := req.Geometry
-	req_res := req.Resolution
+	reqRes := req.Resolution
 	length := GeometryLength(geometry)
 	resolution := length / 100.0
 
@@ -68,8 +68,8 @@ func GetRaster(raster string, w http.ResponseWriter, r *http.Request) {
 		resolution = 0.00025
 	}
 
-	if req_res != 0.0 {
-		resolution = req_res
+	if reqRes != 0.0 {
+		resolution = reqRes
 	}
 
 	// The number of samples we want to process per thread
