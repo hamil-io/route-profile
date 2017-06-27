@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// NewRouter is the default router used throughout.
 func NewRouter() *mux.Router {
 
 	router := mux.NewRouter().StrictSlash(true)

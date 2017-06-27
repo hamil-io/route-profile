@@ -7,18 +7,26 @@ import (
 	"sort"
 )
 
+// Index is a stub handler and used only to verify that the service is running
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Welcome!\n")
 }
 
+// GetElevation takes an API request and returns the elevation along the
+// supplied geometry.
 func GetElevation(w http.ResponseWriter, r *http.Request) {
 	GetRaster("elevation", w, r)
 }
 
+// GetWind takes a request and returns the headwind in m/s along the
+// supplied geometry.
 func GetWind(w http.ResponseWriter, r *http.Request) {
 	GetRaster("wind", w, r)
 }
 
+// GetSegments takes a geometry and a resolution and returns an array
+// of encoded polylines split from the specified geometry at the specified
+// resolution.
 func GetSegments(w http.ResponseWriter, r *http.Request) {
 	var response []string
 	var req Request
@@ -49,6 +57,8 @@ func GetSegments(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetRaster is used by GetWind and GetElevations, it handles splitting the
+// request geometry and parallelizing the underlying raster calculations.
 func GetRaster(raster string, w http.ResponseWriter, r *http.Request) {
 	var result []float64
 	var req Request

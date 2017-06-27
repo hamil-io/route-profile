@@ -4,6 +4,10 @@ import (
 	"math"
 )
 
+// SubGeometry is the main type used throughout. All calls to the db functions
+// will use a SubGeometry. Subgeometry is simply a geometry along with its
+// start/end points and its length. Storing this extra information makes it
+// easier to parallelize our raster functions.
 type SubGeometry struct {
 	StartPosition float64
 	EndPosition   float64
@@ -11,6 +15,8 @@ type SubGeometry struct {
 	Geometry      string
 }
 
+// SubGeometries is a slice of SubGeometry structs.
+// This is sortable by StartPosition.
 type SubGeometries []SubGeometry
 
 func (slice SubGeometries) Len() int {
@@ -25,11 +31,17 @@ func (slice SubGeometries) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
+// RasterSegment is the main data type returned by our db functions.
+// RasterSegment has two parts. The start position, which is represented
+// as a percentage of the incoming SubGeometry's length. And Values, which is
+// an array of the calculated raster values for that SubGeometry.
 type RasterSegment struct {
 	Values        []float64
 	StartPosition float64
 }
 
+// RasterSegments is a slice of RasterSegment structs.
+// This is sortable by StartPosition.
 type RasterSegments []RasterSegment
 
 func (slice RasterSegments) Len() int {
@@ -44,6 +56,8 @@ func (slice RasterSegments) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
+// SplitSegments takes a geometry and a goal and splits the geometry so that
+// each split has the goal length.
 func SplitSegments(geometry string, goal float64) []SubGeometry {
 	var result []SubGeometry
 
@@ -68,6 +82,7 @@ func SplitSegments(geometry string, goal float64) []SubGeometry {
 	return result
 }
 
+// Split will recursively split a SubGeometry until the goal length is reached.
 func Split(geom SubGeometry, goal float64, out chan SubGeometry) <-chan SubGeometry {
 	// Max split per iteration
 	max := 10

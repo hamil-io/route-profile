@@ -2,6 +2,7 @@ package main
 
 import "net/http"
 
+// Route is used by our router to assign handlers
 type Route struct {
 	Name        string
 	Method      string
@@ -9,6 +10,7 @@ type Route struct {
 	HandlerFunc http.HandlerFunc
 }
 
+// Routes is a slice of all available routes
 type Routes []Route
 
 var routes = Routes{
