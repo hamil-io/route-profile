@@ -1,9 +1,11 @@
-package main
+package api
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"route-profile/db"
+	"route-profile/geometry"
 	"sort"
 )
 
@@ -36,14 +38,14 @@ func GetSegments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	geometry := req.Geometry
+	geom := req.Geometry
 	reqRes := req.Resolution
 	goal := 4000.0
 	if reqRes != 0.0 {
 		goal = reqRes
 	}
 
-	segments := SplitSegments(geometry, goal)
+	segments := db.SplitSegments(geom, goal)
 
 	for _, segment := range segments {
 		response = append(response, segment.Geometry)
@@ -68,9 +70,9 @@ func GetRaster(raster string, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	geometry := req.Geometry
+	geom := req.Geometry
 	reqRes := req.Resolution
-	length := GeometryLength(geometry)
+	length := db.GeometryLength(geom)
 	resolution := length / 100.0
 
 	// Prevent oversampling
@@ -85,21 +87,21 @@ func GetRaster(raster string, w http.ResponseWriter, r *http.Request) {
 	// The number of samples we want to process per thread
 	samples := 1000.0
 	goal := samples / (length / resolution)
-	goal *= GeographyLength(geometry)
+	goal *= db.GeographyLength(geom)
 
-	rasterFunc := func(raster string, geom SubGeometry, res float64, out chan RasterSegment) <-chan RasterSegment {
+	rasterFunc := func(raster string, geom geometry.SubGeometry, res float64, out chan geometry.RasterSegment) <-chan geometry.RasterSegment {
 		if raster == "wind" {
-			out <- Wind(geom, resolution)
+			out <- db.Wind(geom, resolution)
 		} else if raster == "elevation" {
-			out <- Elevation(geom, resolution)
+			out <- db.Elevation(geom, resolution)
 		}
 		return out
 	}
 
-	segments := SplitSegments(geometry, goal)
+	segments := db.SplitSegments(geom, goal)
 	total := len(segments)
-	out := make(chan RasterSegment)
-	var rasterSegments RasterSegments
+	out := make(chan geometry.RasterSegment)
+	var rasterSegments geometry.RasterSegments
 
 	for _, segment := range segments {
 		go rasterFunc(raster, segment, resolution, out)

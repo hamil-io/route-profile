@@ -1,4 +1,4 @@
-package main
+package api
 
 // Request is used throughout by our API handlers. All incoming requests should
 // match this struct.

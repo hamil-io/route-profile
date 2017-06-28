@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"net/http"
@@ -6,8 +6,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// NewRouter is the default router used throughout.
-func NewRouter() *mux.Router {
+// MainRouter is the default router used throughout.
+func MainRouter() *mux.Router {
 
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {

@@ -1,9 +1,10 @@
-package main
+package db
 
 import (
 	"database/sql"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // we only need side effects here
 	"os"
+	"route-profile/geometry"
 )
 
 var db *sql.DB
@@ -26,7 +27,7 @@ func init() {
 
 // Wind takes a SubGeometry and returns the headwind in m/s interpolated along
 // that geometry at the specified resolution. Resolution is in Degrees.
-func Wind(geom SubGeometry, resolution float64) RasterSegment {
+func Wind(geom geometry.SubGeometry, resolution float64) geometry.RasterSegment {
 	var headwind float64
 	var result []float64
 	rows, err := db.Query("SELECT headwind FROM wind($1, $2)", geom.Geometry, resolution)
@@ -45,12 +46,12 @@ func Wind(geom SubGeometry, resolution float64) RasterSegment {
 		result = append(result, headwind)
 	}
 
-	return RasterSegment{result, geom.StartPosition}
+	return geometry.RasterSegment{result, geom.StartPosition}
 }
 
 // Elevation takes a SubGeometry and returns the elevation in meters interpolated
 //along that geometry at the specified resolution. Resolution is in Degrees.
-func Elevation(geom SubGeometry, resolution float64) RasterSegment {
+func Elevation(geom geometry.SubGeometry, resolution float64) geometry.RasterSegment {
 	var altitude float64
 	var result []float64
 	rows, err := db.Query("select z from profile(drape($1, 'elevation', $2::numeric))", geom.Geometry, resolution)
@@ -69,16 +70,16 @@ func Elevation(geom SubGeometry, resolution float64) RasterSegment {
 		result = append(result, altitude)
 	}
 
-	return RasterSegment{result, geom.StartPosition}
+	return geometry.RasterSegment{result, geom.StartPosition}
 }
 
 // Geometry takes an encoded polyline and returns a SubGeometry consisting of
 // the geometry, the start/end points of the geometry, and the length.
-func Geometry(geometry string) SubGeometry {
+func Geometry(encoded string) geometry.SubGeometry {
 	var geom string
 	var length float64
 	rows, err := db.Query("select geom, ST_Length(geom::geography) as length from "+
-		"ST_LineFromEncodedPolyline($1) geom", geometry)
+		"ST_LineFromEncodedPolyline($1) geom", encoded)
 	if err != nil {
 		panic(err)
 	}
@@ -92,15 +93,15 @@ func Geometry(geometry string) SubGeometry {
 		}
 	}
 
-	return SubGeometry{Geometry: geom, Length: length}
+	return geometry.SubGeometry{Geometry: geom, Length: length}
 }
 
 // Segments takes a SubGeometry and splits it into n SubGeometries, where n is
 // the number of pices specified.
-func Segments(geom SubGeometry, pieces int) []SubGeometry {
+func Segments(geom geometry.SubGeometry, pieces int) []geometry.SubGeometry {
 	var segment string
 	var length float64
-	var result []SubGeometry
+	var result []geometry.SubGeometry
 	rows, err := db.Query("select geom, length from split_line($1, $2)", geom.Geometry, 1.0/float64(pieces))
 
 	if err != nil {
@@ -114,7 +115,7 @@ func Segments(geom SubGeometry, pieces int) []SubGeometry {
 		if err != nil {
 			panic(err)
 		}
-		result = append(result, SubGeometry{Geometry: segment, Length: length})
+		result = append(result, geometry.SubGeometry{Geometry: segment, Length: length})
 	}
 
 	return result
