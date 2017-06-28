@@ -25,6 +25,8 @@ all: fmt lint vendor | $(BASE) ; $(info $(M) building executable…) @ ## Build 
 		-tags release \
 		-ldflags '-X $(PACKAGE)/cmd.Version=$(VERSION) -X $(PACKAGE)/cmd.BuildDate=$(DATE)' \
 		-o bin/$(PACKAGE) main.go
+	@mkdir -p $(CURDIR)/build
+	@cp $(BASE)/bin/$(PACKAGE) $(CURDIR)/build
 
 .PHONY: install
 install: $(BASE) ; $(info $(M) installing $(PACKAGE)…) @ ## Build program binary
