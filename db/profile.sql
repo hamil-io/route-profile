@@ -15,3 +15,16 @@ BEGIN
         SELECT ST_Z(geom) FROM points3d;
 END;
 $function$;
+
+CREATE OR REPLACE FUNCTION public.points(line geometry)
+RETURNS TABLE(
+   p text
+)
+LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN QUERY
+        WITH points3d AS (SELECT (ST_DumpPoints(line)).geom AS geom)
+        SELECT ST_AsText(geom) FROM points3d;
+END;
+$function$;

@@ -21,7 +21,7 @@ BEGIN
      FROM altitude, points2d p
      WHERE ST_Intersects(altitude.rast, p.geom)),
   points3d AS
-    (SELECT ST_SetSRID(ST_MakePoint(ST_X(geom), ST_Y(geom), val), 4236) AS geom FROM cells)
+    (SELECT ST_SetSRID(ST_MakePoint(ST_X(geom), ST_Y(geom), val), 4326) AS geom FROM cells)
     SELECT ST_MakeLine(geom) INTO geom3d FROM points3d;
     RETURN geom3d;
 END;
@@ -48,7 +48,7 @@ BEGIN
      WHERE ST_Intersects(%I.rast, p.geom)),
     -- Instantiate 3D points
   points3d AS
-    (SELECT ST_SetSRID(ST_MakePoint(ST_X(geom), ST_Y(geom), val), 4236) AS geom FROM cells)
+    (SELECT ST_SetSRID(ST_MakePoint(ST_X(geom), ST_Y(geom), val), 4326) AS geom FROM cells)
     SELECT ST_MakeLine(geom) FROM points3d', line, line, line, sample, __table, __table, __table) INTO geom3d;
     RETURN geom3d;
 END;
