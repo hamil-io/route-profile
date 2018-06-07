@@ -6,7 +6,7 @@ import (
 )
 
 // SplitSegments takes a geometry and a goal and splits the geometry so that
-// each split has the goal length.
+// each segment has the goal length.
 func SplitSegments(geom string, goal float64) []geometry.SubGeometry {
 	var result []geometry.SubGeometry
 

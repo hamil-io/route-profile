@@ -5,4 +5,5 @@ package api
 type Request struct {
 	Geometry   string  `json:"geometry"`
 	Resolution float64 `json:"resolution"`
+	Format     string  `json:"format"`
 }

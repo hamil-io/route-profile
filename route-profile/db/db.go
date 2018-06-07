@@ -1,8 +1,9 @@
 package db
 
 import (
+    "fmt"
 	"database/sql"
-	_ "github.com/lib/pq" // we only need side effects here
+	"github.com/lib/pq"
 	"os"
 	"route-profile/geometry"
 )
@@ -26,7 +27,7 @@ func init() {
 }
 
 // Wind takes a SubGeometry and returns the headwind in m/s interpolated along
-// that geometry at the specified resolution. Resolution is in Degrees.
+// that geometry at the specified resolution. Resolution is in degrees.
 func Wind(geom geometry.SubGeometry, resolution float64) geometry.RasterSegment {
 	var headwind float64
 	var result []float64
@@ -73,6 +74,27 @@ func Elevation(geom geometry.SubGeometry, resolution float64) geometry.RasterSeg
 	return geometry.RasterSegment{result, geom.StartPosition}
 }
 
+// ElevationGeometry takes a polyline and returns a 3D polyline
+func ElevationGeometry(geom geometry.SubGeometry, resolution float64) geometry.SubGeometry {
+	var result string
+	rows, err := db.Query("select * from drape($1, 'elevation', $2::numeric)", geom.Geometry, resolution)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&result)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return geometry.SubGeometry{Geometry: result, StartPosition: geom.StartPosition}
+}
+
 // Geometry takes an encoded polyline and returns a SubGeometry consisting of
 // the geometry, the start/end points of the geometry, and the length.
 func Geometry(encoded string) geometry.SubGeometry {
@@ -97,7 +119,7 @@ func Geometry(encoded string) geometry.SubGeometry {
 }
 
 // Segments takes a SubGeometry and splits it into n SubGeometries, where n is
-// the number of pices specified.
+// the number of pieces specified.
 func Segments(geom geometry.SubGeometry, pieces int) []geometry.SubGeometry {
 	var segment string
 	var length float64
@@ -116,6 +138,36 @@ func Segments(geom geometry.SubGeometry, pieces int) []geometry.SubGeometry {
 			panic(err)
 		}
 		result = append(result, geometry.SubGeometry{Geometry: segment, Length: length})
+	}
+
+	return result
+}
+
+// Combine takes a collection of subgeometries and returns a single subgeometry
+func Combine(geom []geometry.SubGeometry) geometry.SubGeometry {
+	var segment string
+	var geometries []string
+	var result geometry.SubGeometry
+
+	for _, leg := range geom {
+        fmt.Println(leg.Geometry)
+		geometries = append(geometries, leg.Geometry)
+	}
+
+	rows, err := db.Query("select ST_LineMerge(ST_Collect((SELECT * FROM unnest($1::geometry(LineStringZ)[]) as geom)))", pq.Array(geometries))
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&segment)
+		if err != nil {
+			panic(err)
+		}
+		result = geometry.SubGeometry{Geometry: segment, Length: GeometryLength(segment)}
 	}
 
 	return result
@@ -144,7 +196,7 @@ func GeometryLength(geometry string) float64 {
 	return length
 }
 
-// GeographyLength returns the length of the specified encode polyline in meters.
+// GeographyLength returns the length of the specified encoded polyline in meters.
 func GeographyLength(geometry string) float64 {
 	var length float64
 	rows, err := db.Query("SELECT ST_Length(ST_LineFromEncodedPolyline($1)::geography) as length", geometry)
@@ -163,4 +215,46 @@ func GeographyLength(geometry string) float64 {
 	}
 
 	return length
+}
+
+// EncodePolyline converts a geometry in its WKT representation to an encoded polyline
+func EncodePolyline(geometry string) string {
+	var geom string
+	rows, err := db.Query("SELECT ST_AsEncodedPolyline($1)", geometry)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&geom)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return geom
+}
+
+// DecodePolyline converts an encoded polyline to its WKT representation
+func DecodePolyline(geometry string) string {
+	var geom string
+	rows, err := db.Query("SELECT ST_AsEncodedPolyline($1)", geometry)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&geom)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return geom
 }
