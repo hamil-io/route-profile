@@ -1,30 +1,19 @@
 FROM debian
  
-RUN apt-get -y update && \
-    apt-get install -y wget git libpq-dev supervisor postgresql-9.6\
-                       postgresql-9.6-postgis-2.3 postgresql-9.6-postgis-scripts postgis golang && \
+RUN apt-get update -y && apt-get install -y software-properties-common gnupg && \
+    apt-key adv --keyserver pgp.mit.edu --recv-keys D0E480B0 && \
+    add-apt-repository -y "deb http://repo.hamil.io stretch main" && \
+    apt-get -y update && \
+    apt-get install -y wget supervisor route-profile && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ENV POSTGRES_DB route-profile
 ENV DB_NAME route-profile
 ENV DB_USER postgres
-
-ENV GOPATH /go
-ENV PATH $PATH:$GOPATH/bin
 ENV PATH $PATH:/usr/local/bin
 
 ADD . /go/src/github.com/hamil-io
 WORKDIR /go/src/github.com/hamil-io
-
-# Build Service
-WORKDIR route-profile
-RUN go get ./...
-RUN go build
-WORKDIR ..
-
-# Symlink utils
-RUN ln -s /go/src/github.com/hamil-io/utils/wind/load-wind /usr/local/bin/load-wind
-RUN ln -s /go/src/github.com/hamil-io/utils/elevation/load-elevation /usr/local/bin/load-elevation
 
 # Create Postgres functions
 RUN cat db/projection.sql >> docker/init.sql
