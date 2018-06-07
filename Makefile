@@ -4,16 +4,18 @@ PACKAGE  = route-profile
 DATE    ?= $(shell date +%FT%T%z)
 VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || \
 			cat $(CURDIR)/.version 2> /dev/null || echo v0)
+PKG_DIR  = $(CURDIR)/package/debian/usr/local/bin
 GOPATH   = $(CURDIR)/.gopath
 BIN      = $(GOPATH)/bin
 BASE     = $(GOPATH)/src/$(PACKAGE)
 PKGS     = $(or $(PKG),$(shell cd $(BASE) && env GOPATH=$(GOPATH) $(GO) list ./... | grep -v "^$(PACKAGE)/vendor/"))
 TESTPKGS = $(shell env GOPATH=$(GOPATH) $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' $(PKGS))
+SOURCES := $(shell find $(PACKAGE) -name '*.go')
 
 GO      = go
 GODOC   = godoc
 GOFMT   = gofmt
-GLIDE   = glide
+DEP     = dep
 TIMEOUT = 15
 V = 0
 Q = $(if $(filter 1,$V),,@)
@@ -29,12 +31,19 @@ all: fmt lint vendor | $(BASE) ; $(info $(M) building executable…) @ ## Build 
 	@cp $(BASE)/bin/$(PACKAGE) $(CURDIR)/build
 
 .PHONY: install
-install: $(BASE) ; $(info $(M) installing $(PACKAGE)…) @ ## Build program binary
+install: $(BASE) ; $(info $(M) installing $(PACKAGE)…) @
 	@cp $(BASE)/bin/$(PACKAGE) /usr/local/bin/$(PACKAGE)
 
-$(BASE): ; $(info $(M) setting GOPATH…)
+.PHONY: package
+package: all ; $(info $(M) building packages…) @
+	@mkdir -p $(PKG_DIR)
+	@cp $(BASE)/bin/$(PACKAGE) $(PKG_DIR)/$(PACKAGE)
+	@cp $(BASE)/utils/elevation/load-elevation  $(PKG_DIR)/load-elevation
+	@cp $(BASE)/utils/wind/load-wind  $(PKG_DIR)/load-wind
+
+$(BASE): $(SOURCES) ; $(info $(M) setting GOPATH…)
 	@mkdir -p $@
-	@cp -R $(CURDIR)/* $@
+	@cp -R $(CURDIR)/Gopkg.* $@
 	@cp -R $(CURDIR)/$(PACKAGE)/* $@
 
 # Tools
@@ -104,20 +113,17 @@ lint: vendor | $(BASE) $(GOLINT) ; $(info $(M) running golint…) @ ## Run golin
 	 done ; exit $$ret
 
 .PHONY: fmt
-fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
+fmt: $(PACKAGE); $(info $(M) running gofmt…) @ ## Run gofmt on all source files
 	@ret=0 && for d in $$($(GO) list -f '{{.Dir}}' ./... | grep -v /vendor/); do \
 		$(GOFMT) -l -w $$d/*.go || ret=$$? ; \
 	 done ; exit $$ret
 
 # Dependency management
 
-glide.lock: glide.yaml | $(BASE) ; $(info $(M) updating dependencies…)
-	$Q cd $(BASE) && $(GLIDE) update
-	@touch $@
-vendor: glide.lock | $(BASE) ; $(info $(M) retrieving dependencies…)
-	$Q cd $(BASE) && $(GLIDE) --quiet install
-	@ln -sf . vendor/src
-	@touch $@
+Gopkg.lock: Gopkg.toml | $(BASE) ; $(info $(M) updating dependencies…)
+	$Q cd $(BASE) && $(DEP) ensure -update
+vendor: Gopkg.lock | $(BASE) ; $(info $(M) retrieving dependencies…)
+	$Q cd $(BASE) && $(DEP) ensure
 
 # Misc
 
